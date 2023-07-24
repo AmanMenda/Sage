@@ -1,0 +1,5 @@
+- Add reactions roles
+- Assign level 1 to each new member and attribute 1/2 XP for each message sent in the server.
+When some levels are reached, assign the appropriate role automatically
+- Find a way to backup the database remotely
+- Host it 24/7
