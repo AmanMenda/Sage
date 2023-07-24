@@ -6,13 +6,11 @@ class Level(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
-        print("ready")
-        pass
+        self.bot.logger.info(f"Level Cog ready")
 
     @commands.command()
     async def level(self, ctx: commands.Context) -> None:
-        print("rlevel")
-        pass
+        self.bot.logger.info(f"level command executed")
 
 async def setup(bot):
     await bot.add_cog(Level(bot))
