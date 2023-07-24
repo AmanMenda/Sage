@@ -16,12 +16,14 @@ EXTENSIONS = [
     "cogs.level",
 ]
 
-LEVELS_XP = {
-    2: 20,
-    3: 40,
-    4: 70,
-    5: 100,
-    6: 110,
+LEVELS = {
+    1: {0: "Explorateur"},
+    2: {20: "Fabricant d'idées"},
+    3: {40: "Créateur émergent"},
+    4: {70: "Maître de la collaboration"},
+    5: {100: "Pionnier des univers virtuels"},
+    6: {110: "Contributeur émérite"},
+    7: {120: "Pilier de la communauté"}
 }
 
 def load_config(filepath: str):
@@ -82,7 +84,7 @@ class App(commands.Bot):
         cursor.execute("INSERT INTO levels VALUES (?, ?, ?, ?)",
                     str(member.id), 1, 0, config["server_id"])
         db.commit()
- 
+
     async def on_command_completion(self, context: commands.Context) -> None:
         """
         The code in this event is executed every time a normal command has been *successfully* executed.

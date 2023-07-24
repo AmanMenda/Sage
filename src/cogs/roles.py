@@ -13,7 +13,7 @@ class Roles(commands.Cog):
     @commands.command()
     async def roles(self, ctx: commands.Context) -> None:
         self.bot.logger.info(f"roles command executed")
-    
+
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload : discord.RawReactionActionEvent):
         guild_id = payload.guild_id
@@ -21,7 +21,7 @@ class Roles(commands.Cog):
         message_id = payload.message_id
         user_id = payload.user_id
         emoji = payload.emoji
-        self.bot.logger.info(f"reaction added")        
+        self.bot.logger.info(f"reaction added")
 
         # Check if the reaction is from the bot
         if user_id == self.bot.user.id:
@@ -37,7 +37,7 @@ class Roles(commands.Cog):
                     member = guild.get_member(user_id)
                     if member:
                         await member.add_roles(role)
-                        self.bot.logger.info(f"Added role {role.name} to {member.name}")        
+                        self.bot.logger.info(f"Added role {role.name} to {member.name}")
 
 
 async def setup(bot):
