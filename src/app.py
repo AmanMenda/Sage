@@ -4,9 +4,7 @@ import discord
 from discord.ext import commands
 
 import json
-
 import platform
-
 import asyncio
 
 EXTENSIONS = [
@@ -30,7 +28,7 @@ intents.message_content = True
 
 class App(commands.Bot):
     def __init__(self):
-        super().__init__(command_prefix=config["token"],
+        super().__init__(command_prefix=config["prefix"],
                         intents=intents) # missing a help command
 
     async def on_ready(self):
@@ -48,6 +46,7 @@ class App(commands.Bot):
         Process every messages sent by users and trigger the appropriate
         command.
         '''
+        print("message")
         if message.author == self.user or message.author.bot:
             return
         await self.process_commands(message)
@@ -58,7 +57,7 @@ class App(commands.Bot):
 async def load_cogs(app):
     for extension in EXTENSIONS:
         try:
-            await app.load_extension(extension)
+           await app.load_extension(extension)
         except Exception as e:
             sys.stderr.write(f'{type(e).__name__}: {e}\n')
             sys.exit(-1)

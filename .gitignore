@@ -2,3 +2,5 @@ config.json
 
 vscode/
 bot-env/
+
+*__pycache__

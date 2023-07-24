@@ -1,7 +1,18 @@
-from app import config, discord, commands
+from discord.ext import commands
 
-class level(commands.Cog):
-    pass
+class Level(commands.Cog):
+    def __init__(self, bot: commands.Bot) -> None:
+        self.bot = bot
 
-async def setup(app):
-    await app.add_cog(level())
+    @commands.Cog.listener()
+    async def on_ready(self) -> None:
+        print("ready")
+        pass
+
+    @commands.command()
+    async def level(self, ctx: commands.Context) -> None:
+        print("rlevel")
+        pass
+
+async def setup(bot):
+    await bot.add_cog(Level(bot))
