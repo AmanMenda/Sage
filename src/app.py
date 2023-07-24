@@ -7,6 +7,7 @@ import random
 import json
 import platform
 import asyncio
+import sqlite3
 
 import logger
 
@@ -14,6 +15,14 @@ EXTENSIONS = [
     "cogs.roles",
     "cogs.level",
 ]
+
+LEVELS_XP = {
+    2: 20,
+    3: 40,
+    4: 70,
+    5: 100,
+    6: 110,
+}
 
 def load_config(filepath: str):
     '''
@@ -31,6 +40,9 @@ intents.members = True  # Subscribe to the privileged members intent
 intents.reactions = True  # Enable reaction events
 intents.message_content = True
 
+db = sqlite3.connect('src/database/level.db')
+cursor = db.cursor()
+
 class App(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix=config["prefix"],
@@ -47,7 +59,8 @@ class App(commands.Bot):
         self.logger.info(f"Running on: {platform.system()} {platform.release()} ({os.name})")
         self.logger.info("-------------------")
         self.status_task.start() # start status loop task
-
+        cursor.execute("CREATE TABLE IF NOT EXISTS levels (UserId VARCHAR(30), Level INTEGER, Xp BIGINT, ServerId VARCHAR(30))")
+        db.commit()
 
     async def on_message(self, message: discord.Message) -> None:
         '''
@@ -56,8 +69,20 @@ class App(commands.Bot):
         '''
         if message.author == self.user or message.author.bot:
             return
+        # Ajouter 1/2 XP à celui qui l'a envoyé. Si Xp == Level[actuel + 1], update user level in database and reset XPs
+        message_author_id = message.author.id
+        # cursor.execute("SELECT ")
         await self.process_commands(message)
 
+
+    async def on_member_join(self, member: discord.Member):
+        '''
+        Connect to the SQL database and create a row of the new member in the table 'levels'.
+        '''
+        cursor.execute("INSERT INTO levels VALUES (?, ?, ?, ?)",
+                    str(member.id), 1, 0, config["server_id"])
+        db.commit()
+ 
     async def on_command_completion(self, context: commands.Context) -> None:
         """
         The code in this event is executed every time a normal command has been *successfully* executed.
@@ -130,6 +155,7 @@ class App(commands.Bot):
         """
         statuses = ["avec toi!", "avec Krypton!", "avec les humains!"]
         await self.change_presence(activity=discord.Game(random.choice(statuses)))
+
 
     def run(self):
         super().run(config['token'], reconnect=True)
