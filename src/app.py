@@ -82,6 +82,7 @@ class App(commands.Bot):
         self.logger.info("-------------------")
         self.status_task.start() # start status loop task
         cursor.execute("CREATE TABLE IF NOT EXISTS levels (UserId VARCHAR(30), Level INTEGER, Xp BIGINT, ServerId VARCHAR(30))")
+        
         db.commit()
 
     async def on_message(self, message: discord.Message) -> None:
