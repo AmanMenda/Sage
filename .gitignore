@@ -4,4 +4,4 @@ vscode/
 bot-env/
 
 *__pycache__
-discord.log
+*.log

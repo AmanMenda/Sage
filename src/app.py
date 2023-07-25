@@ -9,7 +9,7 @@ import platform
 import asyncio
 import sqlite3
 
-import logger
+import logging
 
 EXTENSIONS = [
     "cogs.roles",
@@ -33,11 +33,11 @@ def levels(activity_roles: list[str]) -> dict:
 
     for i in range(1, 301, +1):
         if i % 20 == 0 or i == 1: # est un palier
-            levels[i] = {XPs: activity_roles[roles_idx]}
+            levels[i] = (XPs, activity_roles[roles_idx])
             if roles_idx != len(activity_roles) - 1:
                 roles_idx += 1
         else:
-            levels[i] = {XPs: ""}
+            levels[i] = (XPs, "")
 
         XPs += 10 if i <= 100 else 5
 
@@ -68,7 +68,12 @@ class App(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix=config["prefix"],
                         intents=intents) # missing a help command
-        self.logger = logger.create(name="discord_bot", logfilename="discord.log")
+        logging.basicConfig(filename="discordBot.log",
+                                          format='%(asctime)s %(message)s',
+                                          filemode='w'
+                            )
+        self.logger = logging.getLogger()
+        self.logger.setLevel(logging.DEBUG)
         self.level_dict = levels(activity_roles)
 
     async def on_ready(self):
@@ -81,8 +86,7 @@ class App(commands.Bot):
         self.logger.info(f"Running on: {platform.system()} {platform.release()} ({os.name})")
         self.logger.info("-------------------")
         self.status_task.start() # start status loop task
-        cursor.execute("CREATE TABLE IF NOT EXISTS levels (UserId VARCHAR(30), Level INTEGER, Xp BIGINT, ServerId VARCHAR(30))")
-        
+        cursor.execute("CREATE TABLE IF NOT EXISTS levels (UserId VARCHAR(30), Level INTEGER, Xp FLOAT, ServerId VARCHAR(30))")
         db.commit()
 
     async def on_message(self, message: discord.Message) -> None:
@@ -92,34 +96,39 @@ class App(commands.Bot):
         '''
         if message.author == self.user or message.author.bot:
             return
-        # Ajouter 1/2 XP à celui qui l'a envoyé. Si Xp == Level[actuel + 1], update user level in database,
-        # reset XPs, assign new role and remove last role
-        message_author_id = message.author.id
-        cursor.execute("SELECT Level, Xp FROM levels WHERE UserId = ?", (str(message_author_id),)) # do not change this,
-                                                                                            # the second value should be a tuple
-        result = cursor.fetchone()
-        # result format should be -> [(Level: int, Xp: bigint)]
-        current_level, current_xp = result[0]
 
-        # Par défaut, incrémenter
+        # fetch the data from the database
+        message_author_id = message.author.id
+        cursor.execute("SELECT Level, Xp FROM levels WHERE UserId = ?", (str(message_author_id),)) # do not change this, the second value should be a tuple
+        db.commit()
+        result = cursor.fetchone() # result format should be -> [Level: int, Xp: float]
+
+        self.logger.debug(f"level: {result[0]}, xps: {result[1]}")
+        current_level = result[0]
+        current_xp = result[1]
+
+        # By default, increment xp value
         current_xp += 0.5
 
-        # Vérifier si chaine de caractère associée à xps du niveau était vide ou non.
-        if (current_level <= 100 and current_xp == (self.level_dict[current_level + 1].keys()[0])) or \
-            (current_level > 100 and current_xp == (self.level_dict[current_level + 1].keys()[0])):
+        next_level_xp_requirement = (self.level_dict[current_level + 1])[0]
+        self.logger.debug(f"next_level_xp_requirement: {next_level_xp_requirement}")
 
-            old_role_name = (self.level_dict[current_level])[current_xp]
+        if current_xp == next_level_xp_requirement:
+
+            old_role_name = (self.level_dict[current_level])[1]
             current_level += 1
 
-            if (self.level_dict[current_level])[current_xp] != "":
-                new_role_name = (self.level_dict[current_level])[current_xp]
+            if (self.level_dict[current_level])[1] != "":
+                new_role_name = (self.level_dict[current_level])[1]
                 message.author.remove_role(old_role_name)
                 message.author.add_roles(new_role_name)
             current_xp = 0
 
         # update current_xp and current_level in database
-        cursor.execute("UPDATE levels SET Level = ?, Xp = ? WHERE UserId = ?", current_level, current_xp, str(message_author_id))
+        self.logger.debug(f"Message author id: {str(message_author_id)}")
+        cursor.execute("UPDATE levels SET Level = ?, Xp = ? WHERE UserId = ?", (current_level, current_xp, str(message_author_id)))
         db.commit()
+
         await self.process_commands(message)
 
 
@@ -128,15 +137,13 @@ class App(commands.Bot):
         Connect to the SQL database and create a row of the new member in the table 'levels'.
         '''
         cursor.execute("INSERT INTO levels VALUES (?, ?, ?, ?)",
-                    str(member.id), 1, 0, config["server_id"])
+                    str(member.id), 1, 0, config["server_id"]) # not tested yet, may need data to be packed or use executemany
         db.commit()
 
     async def on_command_completion(self, context: commands.Context) -> None:
-        """
+        '''
         The code in this event is executed every time a normal command has been *successfully* executed.
-
-        :param context: The context of the command that has been executed.
-        """
+        '''
         full_command_name = context.command.qualified_name
         split = full_command_name.split(" ")
         executed_command = str(split[0])
