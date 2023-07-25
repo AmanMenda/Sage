@@ -39,21 +39,11 @@ def levels(activity_roles: list[str]) -> dict:
         else:
             levels[i] = {XPs: ""}
 
-        if i <= 100:
-            XPs += 10
-        else:
-            XPs += 5
+        XPs += 10 if i <= 100 else 5
 
     return levels
 
-
-
 # add a close function to close the opened connection
-
-
-
-
-
 
 def load_config(filepath: str):
     '''
@@ -119,7 +109,6 @@ class App(commands.Bot):
 
             old_role_name = (self.level_dict[current_level])[current_xp]
             current_level += 1
-
 
             if (self.level_dict[current_level])[current_xp] != "":
                 new_role_name = (self.level_dict[current_level])[current_xp]
@@ -206,7 +195,7 @@ class App(commands.Bot):
         else:
             raise error
 
-    @tasks.loop(seconds=20)
+    @tasks.loop(seconds=120)
     async def status_task(self) -> None:
         """
         Setup the game status task of the bot.
