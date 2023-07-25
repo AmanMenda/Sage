@@ -16,15 +16,44 @@ EXTENSIONS = [
     "cogs.level",
 ]
 
-LEVELS = {
-    1: {0: "Explorateur"},
-    2: {20: "Fabricant d'idées"},
-    3: {40: "Créateur émergent"},
-    4: {70: "Maître de la collaboration"},
-    5: {100: "Pionnier des univers virtuels"},
-    6: {110: "Contributeur émérite"},
-    7: {120: "Pilier de la communauté"}
-}
+#define your roles from the less important one to the most important one
+activity_roles = ["Explorateur", "Fabricant d'idées", "Créateur émergent",
+             "Maître de la collaboration", "Pionnier des univers virtuels",
+             "Contributeur émérite", "Pilier de la communauté"]
+
+def levels(activity_roles: list[str]) -> dict:
+    '''
+    A function to automatically define levels,
+    their corresponding XPs and roles.
+    Should the levels be defined in the db or in the code ?
+    '''
+    XPs = 0
+    levels = {}
+    roles_idx = 0
+
+    for i in range(1, 301, +1):
+        if i % 20 == 0 or i == 1: # est un palier
+            levels[i] = {XPs: activity_roles[roles_idx]}
+            if roles_idx != len(activity_roles) - 1:
+                roles_idx += 1
+        else:
+            levels[i] = {XPs: ""}
+
+        if i <= 100:
+            XPs += 10
+        else:
+            XPs += 5
+
+    return levels
+
+
+
+# add a close function to close the opened connection
+
+
+
+
+
 
 def load_config(filepath: str):
     '''
@@ -50,6 +79,7 @@ class App(commands.Bot):
         super().__init__(command_prefix=config["prefix"],
                         intents=intents) # missing a help command
         self.logger = logger.create(name="discord_bot", logfilename="discord.log")
+        self.level_dict = levels(activity_roles)
 
     async def on_ready(self):
         '''
@@ -71,9 +101,35 @@ class App(commands.Bot):
         '''
         if message.author == self.user or message.author.bot:
             return
-        # Ajouter 1/2 XP à celui qui l'a envoyé. Si Xp == Level[actuel + 1], update user level in database and reset XPs
+        # Ajouter 1/2 XP à celui qui l'a envoyé. Si Xp == Level[actuel + 1], update user level in database,
+        # reset XPs, assign new role and remove last role
         message_author_id = message.author.id
-        # cursor.execute("SELECT ")
+        cursor.execute("SELECT Level, Xp FROM levels WHERE UserId = ?", (str(message_author_id),)) # do not change this,
+                                                                                            # the second value should be a tuple
+        result = cursor.fetchone()
+        # result format should be -> [(Level: int, Xp: bigint)]
+        current_level, current_xp = result[0]
+
+        # Par défaut, incrémenter
+        current_xp += 0.5
+
+        # Vérifier si chaine de caractère associée à xps du niveau était vide ou non.
+        if (current_level <= 100 and current_xp == (self.level_dict[current_level + 1].keys()[0])) or \
+            (current_level > 100 and current_xp == (self.level_dict[current_level + 1].keys()[0])):
+
+            old_role_name = (self.level_dict[current_level])[current_xp]
+            current_level += 1
+
+
+            if (self.level_dict[current_level])[current_xp] != "":
+                new_role_name = (self.level_dict[current_level])[current_xp]
+                message.author.remove_role(old_role_name)
+                message.author.add_roles(new_role_name)
+            current_xp = 0
+
+        # update current_xp and current_level in database
+        cursor.execute("UPDATE levels SET Level = ?, Xp = ? WHERE UserId = ?", current_level, current_xp, str(message_author_id))
+        db.commit()
         await self.process_commands(message)
 
 
