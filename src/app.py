@@ -3,11 +3,11 @@ import sys, os
 import discord
 from discord.ext import commands, tasks
 
-import random
 import json
-import platform
+import random
 import asyncio
 import sqlite3
+import platform
 
 import logging
 
@@ -131,7 +131,6 @@ class App(commands.Bot):
 
         await self.process_commands(message)
 
-
     async def on_member_join(self, member: discord.Member):
         '''
         Connect to the SQL database and create a row of the new member in the table 'levels'.
@@ -147,67 +146,64 @@ class App(commands.Bot):
         full_command_name = context.command.qualified_name
         split = full_command_name.split(" ")
         executed_command = str(split[0])
+
         if context.guild is not None:
-            self.logger.info(
-                f"Executed {executed_command} command in {context.guild.name} (ID: {context.guild.id}) by {context.author} (ID: {context.author.id})"
-            )
+            self.logger.info(f"Executed {executed_command} command in {context.guild.name} (ID: {context.guild.id}) by {context.author} (ID: {context.author.id})")
         else:
-            self.logger.info(
-                f"Executed {executed_command} command by {context.author} (ID: {context.author.id}) in DMs"
-            )
+            self.logger.info(f"Executed {executed_command} command by {context.author} (ID: {context.author.id}) in DMs")
 
     async def on_command_error(self, context: commands.Context, error) -> None:
-        """
+        '''
         The code in this event is executed every time a normal valid command catches an error.
-
-        :param context: The context of the normal command that failed executing.
-        :param error: The error that has been faced.
-        """
+        '''
         if isinstance(error, commands.CommandNotFound):
-            self.logger.warning(
-                f"Command not found: {context.message.content} by {context.author} (ID: {context.author.id})"
-            )
+            self.logger.warning(f"Command not found: {context.message.content} by {context.author} (ID: {context.author.id})")
+
         elif isinstance(error, commands.CommandOnCooldown):
             minutes, seconds = divmod(error.retry_after, 60)
             hours, minutes = divmod(minutes, 60)
             hours = hours % 24
             embed = discord.Embed(
                 description=f"**Please slow down** - You can use this command again in {f'{round(hours)} hours' if round(hours) > 0 else ''} {f'{round(minutes)} minutes' if round(minutes) > 0 else ''} {f'{round(seconds)} seconds' if round(seconds) > 0 else ''}.",
-                color=0xE02B2B,
+                color=0x5865F2,
             )
             await context.send(embed=embed)
+
         elif isinstance(error, commands.MissingPermissions):
             embed = discord.Embed(
                 description="You are missing the permission(s) `"
                 + ", ".join(error.missing_permissions)
                 + "` to execute this command!",
-                color=0xE02B2B,
+                color=0x5865F2,
             )
             await context.send(embed=embed)
+
         elif isinstance(error, commands.BotMissingPermissions):
             embed = discord.Embed(
                 description="I am missing the permission(s) `"
                 + ", ".join(error.missing_permissions)
                 + "` to fully perform this command!",
-                color=0xE02B2B,
+                color=0x5865F2,
             )
             await context.send(embed=embed)
+
         elif isinstance(error, commands.MissingRequiredArgument):
             embed = discord.Embed(
                 title="Error!",
                 # We need to capitalize because the command arguments have no capital letter in the code.
                 description=str(error).capitalize(),
-                color=0xE02B2B,
+                color=0x5865F2,
             )
             await context.send(embed=embed)
+
         else:
             raise error
 
     @tasks.loop(seconds=120)
     async def status_task(self) -> None:
-        """
+        '''
         Setup the game status task of the bot.
-        """
+        '''
         statuses = ["avec toi!", "avec Krypton!", "avec les humains!"]
         await self.change_presence(activity=discord.Game(random.choice(statuses)))
 
