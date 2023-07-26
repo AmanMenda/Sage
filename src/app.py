@@ -108,7 +108,7 @@ class App(commands.Bot):
         current_xp = result[1]
 
         # By default, increment xp value
-        current_xp += 10
+        current_xp += len(message) / 4
 
         next_level_xp_requirement = (self.level_dict[current_level + 1])[0]
         self.logger.debug(f"next_level_xp_requirement: {next_level_xp_requirement}")
