@@ -108,7 +108,7 @@ class App(commands.Bot):
         current_xp = result[1]
 
         # By default, increment xp value
-        current_xp += 0.5
+        current_xp += 1
 
         next_level_xp_requirement = (self.level_dict[current_level + 1])[0]
         self.logger.debug(f"next_level_xp_requirement: {next_level_xp_requirement}")
@@ -116,7 +116,7 @@ class App(commands.Bot):
         if current_xp == next_level_xp_requirement:
 
             old_role_name = (self.level_dict[current_level])[1]
-            current_level += 1
+            current_level += 10 # tests
 
             if (self.level_dict[current_level])[1] != "":
                 new_role_name = (self.level_dict[current_level])[1]
