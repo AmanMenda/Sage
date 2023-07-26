@@ -120,8 +120,10 @@ class App(commands.Bot):
 
             if (self.level_dict[current_level])[1] != "":
                 new_role_name = (self.level_dict[current_level])[1]
-                message.author.remove_role(old_role_name)
-                message.author.add_roles(new_role_name)
+                # remove old role
+                await message.author.remove_roles(discord.utils.get(message.guild.roles, name=old_role_name))
+                # add new role
+                await message.author.add_roles(discord.utils.get(message.guild.roles, name=new_role_name))
             current_xp = 0
 
         # update current_xp and current_level in database
