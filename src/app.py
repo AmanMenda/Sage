@@ -3,16 +3,17 @@ import sys, os
 import discord
 from discord.ext import commands, tasks
 
+from typing import List
 import json
 import random
 import asyncio
 import sqlite3
 import platform
 
-import logging
+import utils
+import logger
 
 EXTENSIONS = [
-    "cogs.roles",
     "cogs.level",
 ]
 
@@ -21,7 +22,7 @@ activity_roles = ["Explorateur", "Fabricant d'idées", "Créateur émergent",
              "Maître de la collaboration", "Pionnier des univers virtuels",
              "Contributeur émérite", "Pilier de la communauté"]
 
-def levels(activity_roles: list[str]) -> dict:
+def levels(acty_roles: List[str]) -> dict:
     '''
     A function to automatically define levels,
     their corresponding XPs and roles.
@@ -32,12 +33,12 @@ def levels(activity_roles: list[str]) -> dict:
     roles_idx = 0
 
     for i in range(1, 301, +1):
-        if i % 20 == 0 or i == 1: # est un palier
-            levels[i] = (XPs, activity_roles[roles_idx])
-            if roles_idx != len(activity_roles) - 1:
+        if i % 19 == 0: # tous les 20 niveaux
+            levels[i] = (XPs, acty_roles[roles_idx])
+            if roles_idx != len(acty_roles) - 1:
                 roles_idx += 1
         else:
-            levels[i] = (XPs, "")
+            levels[i] = (XPs, acty_roles[roles_idx])
 
         XPs += 10 if i <= 100 else 5
 
@@ -57,6 +58,7 @@ def load_config(filepath: str):
 
 config = load_config("config.json")
 intents = discord.Intents.default()
+intents.guilds = True
 intents.members = True  # Subscribe to the privileged members intent
 intents.reactions = True  # Enable reaction events
 intents.message_content = True
@@ -66,14 +68,10 @@ cursor = db.cursor()
 
 class App(commands.Bot):
     def __init__(self):
+        global activity_roles
         super().__init__(command_prefix=config["prefix"],
                         intents=intents) # missing a help command
-        logging.basicConfig(filename="discordBot.log",
-                                          format='%(asctime)s %(message)s',
-                                          filemode='w'
-                            )
-        self.logger = logging.getLogger()
-        self.logger.setLevel(logging.DEBUG)
+        self.logger = logger.create(name="discord_bot", logfilename="discord.log")
         self.level_dict = levels(activity_roles)
 
     async def on_ready(self):
@@ -96,7 +94,6 @@ class App(commands.Bot):
         '''
         if message.author == self.user or message.author.bot:
             return
-
         # fetch the data from the database
         message_author_id = message.author.id
         cursor.execute("SELECT Level, Xp FROM levels WHERE UserId = ?", (str(message_author_id),)) # do not change this, the second value should be a tuple
@@ -109,22 +106,26 @@ class App(commands.Bot):
 
         # By default, increment xp value
         current_xp += 0.5
-
         next_level_xp_requirement = (self.level_dict[current_level + 1])[0]
-        self.logger.debug(f"next_level_xp_requirement: {next_level_xp_requirement}")
-
-        if current_xp == next_level_xp_requirement:
-
+        if current_xp >= next_level_xp_requirement:
             old_role_name = (self.level_dict[current_level])[1]
             current_level += 1
-
-            if (self.level_dict[current_level])[1] != "":
-                new_role_name = (self.level_dict[current_level])[1]
-                # remove old role
-                await message.author.remove_roles(discord.utils.get(message.guild.roles, name=old_role_name))
-                # add new role
-                await message.author.add_roles(discord.utils.get(message.guild.roles, name=new_role_name))
-            current_xp = 0
+            new_role_name = (self.level_dict[current_level])[1]
+            current_xp -= next_level_xp_requirement
+            self.logger.info(f"=>> Level up! {current_level - 1} = > {current_level}")            
+            if new_role_name != old_role_name:                
+                old_role = discord.utils.get(message.guild.roles, name=old_role_name)
+                new_role = discord.utils.get(message.guild.roles, name=new_role_name)
+                if (new_role and old_role):
+                    # remove old role
+                    await message.author.remove_roles(old_role)
+                    # add new role
+                    await message.author.add_roles(new_role)
+                    self.logger.info(f"Level up! new role assigned: new_role={new_role_name}")   
+                    embed = utils.embeds.role_upgrade(author=message.author, bot_latency=self.latency, lvl=current_level, role=new_role)
+            else:
+                    embed = utils.embeds.level_up(author=message.author, bot_latency=self.latency, lvl=current_level)
+            await message.channel.send(embed=embed)
 
         # update current_xp and current_level in database
         self.logger.debug(f"Message author id: {str(message_author_id)}")
