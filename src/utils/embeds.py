@@ -3,7 +3,7 @@ import discord
 
 # define an object Embed which goal is to generate all kinds of embed
 
-def current_level(author: discord.Member, bot_latency : float, lvl: int, xp : float):
+def current_level(author: discord.Member, bot_latency : float, lvl: int, xp : float, next_rq : float):
     embed = discord.Embed(
         title='Vous avez demandé à connaître votre niveau ?',
         color=0x34495E, # define the side-bar color as navy
@@ -12,7 +12,7 @@ def current_level(author: discord.Member, bot_latency : float, lvl: int, xp : fl
 
     embed.add_field(name="Auteur de la commande", value=f"{author.mention}", inline=True)
     embed.add_field(name="Niveau actuel", value=f"{lvl}", inline=True)
-    embed.add_field(name="Points d'expérience", value=f"{xp} pts", inline=True)
+    embed.add_field(name="Points d'expérience", value=f"{xp} / {next_rq} pts ", inline=True)
 
     embed.set_image(url="https://i.pinimg.com/originals/e4/15/c4/e415c48c6387706cc02f92b09501cab5.gif")
     embed.set_footer(text="Ping: {:.2f}".format(bot_latency * 1000) + " ms")
