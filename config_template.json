@@ -1,4 +1,5 @@
 {
     "token": "YOUR_BOT_TOKEN",
-    "prefix": "YOUR_BOT_PREFIX"
+    "prefix": "YOUR_BOT_PREFIX",
+    "server_id": "YOUR_SERVER_ID"
 }
