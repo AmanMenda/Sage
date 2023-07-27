@@ -20,3 +20,13 @@ Passage d'un niveau à un autre:
 - Store roles by IDs
 
 - Store levels in another table of the db levels
+
+- The bot need a "help" command
+
+- we should put the database and logger folders at the root of the repository
+
+- use the .json file everytime it's necessary in the code for more readability
+
+- update the bot bio to remind people they can contribute on github
+
+- A workflow could be useful to update the database if hosted
