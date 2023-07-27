@@ -2,13 +2,14 @@ import discord
 from utils import embeds
 
 from discord.ext import commands
-from app import db
+from app import db, activity_roles, levels
 
 cursor = db.cursor()
 
 class Level(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
+        self.level_dict = levels(activity_roles)
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
