@@ -26,7 +26,8 @@ def levels(acty_roles: List[str]) -> dict:
     '''
     A function to automatically define levels,
     their corresponding XPs and roles.
-    Should the levels be defined in the db or in the code ?
+    This one define from level 0 to 300 and the ultimate level will
+    soon be taken as a parameter
     '''
     XPs = 0
     levels = {}
@@ -73,11 +74,12 @@ class App(commands.Bot):
                         intents=intents) # missing a help command
         self.logger = logger.create(name="discord_bot", logfilename="discord.log")
         self.level_dict = levels(activity_roles)
-        print(json.dumps(self.level_dict))
+        # print(json.dumps(self.level_dict))
 
     async def on_ready(self):
         '''
-        Print general infos about the bot and the platform its running on.
+        Print general infos about the bot and the platform its running on
+        and create a database to store level, xp of a user on a server
         '''
         self.logger.info(f"Logged in as {self.user.name}")
         self.logger.info(f"discord.py API version: {discord.__version__}")
@@ -91,10 +93,13 @@ class App(commands.Bot):
     async def on_message(self, message: discord.Message) -> None:
         '''
         Process every messages sent by users and trigger the appropriate
-        command.
+        command. This function also serves the purpose of adding experience
+        points to the message author, grant him new roles according to his level
+        to maximise his interactions in the server.
         '''
         if message.author == self.user or message.author.bot:
             return
+
         # fetch the data from the database
         message_author_id = message.author.id
         cursor.execute("SELECT Level, Xp FROM levels WHERE UserId = ?", (str(message_author_id),)) # do not change this, the second value should be a tuple
@@ -127,7 +132,7 @@ class App(commands.Bot):
                     self.logger.info(f"Level up! new role assigned: new_role={new_role_name}")
                     embed = utils.embeds.role_upgrade(author=message.author, bot_latency=self.latency, lvl=current_level, role=new_role)
             else:
-                    embed = utils.embeds.level_up(author=message.author, bot_latency=self.latency, lvl=current_level)
+                embed = utils.embeds.level_up(author=message.author, bot_latency=self.latency, lvl=current_level)
             await message.channel.send(embed=embed)
 
         # update current_xp and current_level in database
@@ -140,6 +145,7 @@ class App(commands.Bot):
     async def on_member_join(self, member: discord.Member):
         '''
         Connect to the SQL database and create a row of the new member in the table 'levels'.
+        TODO: By default, the first role of the list is assigned to new members.
         '''
         cursor.execute("INSERT INTO levels VALUES (?, ?, ?, ?)",
                     str(member.id), 1, 0, config["server_id"]) # not tested yet, may need data to be packed or use executemany

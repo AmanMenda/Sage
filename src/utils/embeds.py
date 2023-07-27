@@ -29,7 +29,7 @@ def level_up(author: discord.Member, bot_latency : float, lvl: int):
     return (embed)
 
 def role_upgrade(author: discord.Member, bot_latency : float, lvl: int, xp: float, role: discord.Role):
-    
+
     embed = discord.Embed(
         title=f'🌟 Félicitations ! 🌟 Nous sommes extrêmement fiers de tes progrès et de ton engagement dans notre communauté.',
         color=0x34495E, # define the side-bar color as navy
