@@ -5,3 +5,5 @@ bot-env/
 
 *__pycache__
 *.log
+
+doc/*.txt
