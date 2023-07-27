@@ -32,11 +32,11 @@ def levels(acty_roles: List[str]) -> dict:
     levels = {}
     roles_idx = 0
 
-    for i in range(1, 301, +1):
-        if i % 19 == 0: # tous les 20 niveaux
-            levels[i] = (XPs, acty_roles[roles_idx])
+    for i in range(0, 301, +1):
+        if i % 20 == 0 and i != 0:
             if roles_idx != len(acty_roles) - 1:
                 roles_idx += 1
+            levels[i] = (XPs, acty_roles[roles_idx])
         else:
             levels[i] = (XPs, acty_roles[roles_idx])
 
@@ -73,6 +73,7 @@ class App(commands.Bot):
                         intents=intents) # missing a help command
         self.logger = logger.create(name="discord_bot", logfilename="discord.log")
         self.level_dict = levels(activity_roles)
+        print(json.dumps(self.level_dict))
 
     async def on_ready(self):
         '''
@@ -105,7 +106,8 @@ class App(commands.Bot):
         current_xp = result[1]
 
         # By default, increment xp value
-        current_xp += 0.5
+        current_xp += len(message.content) / 4
+
         next_level_xp_requirement = (self.level_dict[current_level + 1])[0]
         self.logger.debug(f"next_level_xp_requirement: {next_level_xp_requirement}")
         if current_xp >= next_level_xp_requirement:
@@ -113,8 +115,8 @@ class App(commands.Bot):
             current_level += 1
             new_role_name = (self.level_dict[current_level])[1]
             current_xp -= next_level_xp_requirement
-            self.logger.info(f"=>> Level up! {current_level - 1} = > {current_level}")            
-            if new_role_name != old_role_name:                
+            self.logger.info(f"=>> Level up! {current_level - 1} = > {current_level}")
+            if new_role_name != old_role_name:
                 old_role = discord.utils.get(message.guild.roles, name=old_role_name)
                 new_role = discord.utils.get(message.guild.roles, name=new_role_name)
                 if (new_role and old_role):
@@ -122,7 +124,7 @@ class App(commands.Bot):
                     await message.author.remove_roles(old_role)
                     # add new role
                     await message.author.add_roles(new_role)
-                    self.logger.info(f"Level up! new role assigned: new_role={new_role_name}")   
+                    self.logger.info(f"Level up! new role assigned: new_role={new_role_name}")
                     embed = utils.embeds.role_upgrade(author=message.author, bot_latency=self.latency, lvl=current_level, role=new_role)
             else:
                     embed = utils.embeds.level_up(author=message.author, bot_latency=self.latency, lvl=current_level)

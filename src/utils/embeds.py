@@ -1,6 +1,8 @@
 from discord.ext import commands
 import discord
 
+# define an object Embed which goal is to generate all kinds of embed
+
 def current_level(author: discord.Member, bot_latency : float, lvl: int, xp : float):
     embed = discord.Embed(
         title='Vous avez demandé à connaître votre niveau ?',
