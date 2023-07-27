@@ -1,1 +1,22 @@
 Should be able to load files with other extensions ? (.toml, xml, etc ?)
+
+Passage d'un niveau à un autre:
+    - Actualiser XP (XP += 0.5)
+    - Vérifier si (niv actuel <= 100 and XP == (XP niveau actuel + 10)) car XP next_level = XP curr_level + 10
+    Si oui, reset le nombre d'XP à 0XP et passer à niveau actuel + 1
+
+    Ex:
+        niveau 1, xp avant actualisation = 19.5
+        xp après actualisation = 10, or XPniv 2 = XPniv1(0) + 10
+        xp après actualisation == XPniv2
+        niv = current_niv + 1
+
+
+- Si nouveau niveau est un palier, assigner role et retirer ancien
+    if niv in LEVELS:
+        add_role(LEVELS[niv])
+        remove_role(role avant <role nouvellement assigné> - cf discord API)
+
+- Store roles by IDs
+
+- Store levels in another table of the db levels
