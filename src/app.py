@@ -161,8 +161,6 @@ class App(commands.Bot):
         Connect to the SQL database and create a row of the new member in the table 'levels'.
         TODO: By default, the first role of the list is assigned to new members.
         '''
-        cursor.execute("INSERT INTO Users VALUES (?, ?, ?, ?)",
-                    (str(member.id), 0, 0, config["server_id"]))
         db.commit()
         default_role = discord.utils.get(member.guild.roles, name=activity_roles[0])
         if default_role is not None:
