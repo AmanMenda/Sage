@@ -21,7 +21,7 @@ Passage d'un niveau à un autre:
 
 - The bot need a "help" command
 
-- use the .json file everytime it's necessary in the code for more readability
+- use the .json file everytime it's necessary in the code for more readability (done)
 
 - update the bot bio to remind people they can contribute on github
 

@@ -4,8 +4,7 @@ A discord bot written in a highly reusable way using the <a href="https://discor
 
 ## Features
 
-- [ ] Reaction Roles
-- [x] Customizable level system and ability to attribute an activity role when some levels are reached
+- [x] Customizable level system and ability to associate roles to levels
 - [x] Generate fun embeds when someone level-up or get a new role
 - [ ] Hosted 24/7
 
