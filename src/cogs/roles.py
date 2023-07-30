@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 
-class Roles(commands.Cog):
+class Roles(commands.Cog, name='roles'):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 

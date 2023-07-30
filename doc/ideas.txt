@@ -17,13 +17,9 @@ Passage d'un niveau à un autre:
         add_role(LEVELS[niv])
         remove_role(role avant <role nouvellement assigné> - cf discord API)
 
-- Store roles by IDs
-
 - Store levels in another table of the db levels
 
 - The bot need a "help" command
-
-- we should put the database and logger folders at the root of the repository
 
 - use the .json file everytime it's necessary in the code for more readability
 

@@ -1,5 +1,7 @@
 {
     "token": "YOUR_BOT_TOKEN",
     "prefix": "YOUR_BOT_PREFIX",
-    "server_id": "YOUR_SERVER_ID"
+    "server_id": "YOUR_SERVER_ID",
+    "permissions": "YOUR_BOT_PERMISSIONS_HERE",
+    "app_id": "YOUR_APPLICATION_ID_HERE"
 }
