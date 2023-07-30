@@ -40,7 +40,7 @@ def create(name: str, logfilename: str) -> Logger:
     # Console handler
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(LoggingFormatter())
-    console_handler.setLevel(logging.INFO)
+    console_handler.setLevel(logging.DEBUG)
     # File handler
     file_handler = logging.FileHandler(filename=logfilename, encoding="utf-8", mode="w")
     file_handler_formatter = logging.Formatter(

@@ -3,6 +3,7 @@ import sys, os
 import discord
 from discord.ext import commands, tasks
 
+from sys import path
 from typing import List
 import json
 import random
@@ -11,10 +12,12 @@ import sqlite3
 import platform
 
 import utils
+path.insert(0, "src/../")
 import logger
 
 EXTENSIONS = [
     "cogs.level",
+    "cogs.general",
 ]
 
 #define your roles from the less important one to the most important one
@@ -41,7 +44,7 @@ def levels(acty_roles: List[str]) -> dict:
         else:
             levels[i] = (XPs, acty_roles[roles_idx])
 
-        XPs += 10 if i <= 100 else 5
+        XPs += 20 if i <= 100 else 10
 
     return levels
 
@@ -58,13 +61,15 @@ def load_config(filepath: str):
             return json.load(file)
 
 config = load_config("config.json")
+colors = load_config("colors.json")
+
 intents = discord.Intents.default()
 intents.guilds = True
 intents.members = True  # Subscribe to the privileged members intent
 intents.reactions = True  # Enable reaction events
 intents.message_content = True
 
-db = sqlite3.connect('src/database/level.db')
+db = sqlite3.connect('database/sage.db')
 cursor = db.cursor()
 
 class App(commands.Bot):
@@ -74,7 +79,7 @@ class App(commands.Bot):
                         intents=intents) # missing a help command
         self.logger = logger.create(name="discord_bot", logfilename="discord.log")
         self.level_dict = levels(activity_roles)
-        # print(json.dumps(self.level_dict))
+        print(json.dumps(self.level_dict))
 
     async def on_ready(self):
         '''
@@ -87,7 +92,7 @@ class App(commands.Bot):
         self.logger.info(f"Running on: {platform.system()} {platform.release()} ({os.name})")
         self.logger.info("-------------------")
         self.status_task.start() # start status loop task
-        cursor.execute("CREATE TABLE IF NOT EXISTS levels (UserId VARCHAR(30), Level INTEGER, Xp FLOAT, ServerId VARCHAR(30))")
+        cursor.execute("CREATE TABLE IF NOT EXISTS Users (UserId VARCHAR(30), Level INTEGER, Xp FLOAT, ServerId VARCHAR(30))")
         db.commit()
 
     async def on_message(self, message: discord.Message) -> None:
@@ -102,7 +107,7 @@ class App(commands.Bot):
 
         # fetch the data from the database
         message_author_id = message.author.id
-        cursor.execute("SELECT Level, Xp FROM levels WHERE UserId = ?", (str(message_author_id),)) # do not change this, the second value should be a tuple
+        cursor.execute("SELECT Level, Xp FROM Users WHERE UserId = ? AND ServerId = ?", (str(message_author_id), config["server_id"])) # do not change this, the second value should be a tuple
         db.commit()
         result = cursor.fetchone() # result format should be -> [Level: int, Xp: float]
 
@@ -111,33 +116,42 @@ class App(commands.Bot):
         current_xp = result[1]
 
         # By default, increment xp value
-        current_xp += len(message.content) / 4
+        current_xp += len(message.content) / 10
 
         next_level_xp_requirement = (self.level_dict[current_level + 1])[0]
         self.logger.debug(f"next_level_xp_requirement: {next_level_xp_requirement}")
+
         if current_xp >= next_level_xp_requirement:
+
+            self.logger.info(f"=>> Level up! {current_level} = > {current_level + 1}")
+
             old_role_name = (self.level_dict[current_level])[1]
             current_level += 1
             new_role_name = (self.level_dict[current_level])[1]
             current_xp -= next_level_xp_requirement
-            self.logger.info(f"=>> Level up! {current_level - 1} = > {current_level}")
+
             if new_role_name != old_role_name:
+
                 old_role = discord.utils.get(message.guild.roles, name=old_role_name)
+                self.logger.debug(f"old role: {old_role}")
+
                 new_role = discord.utils.get(message.guild.roles, name=new_role_name)
+                self.logger.debug(f"new role: {new_role}")
+
                 if (new_role and old_role):
-                    # remove old role
                     await message.author.remove_roles(old_role)
-                    # add new role
                     await message.author.add_roles(new_role)
-                    self.logger.info(f"Level up! new role assigned: new_role={new_role_name}")
-                    embed = utils.embeds.role_upgrade(author=message.author, bot_latency=self.latency, lvl=current_level, role=new_role)
+                    self.logger.info(f"New role assigned: new_role={new_role_name}")
+                    embed = utils.embeds.role_upgrade(author=message.author, bot_latency=self.latency, lvl=current_level, xp=current_xp, role=new_role)
+
             else:
                 embed = utils.embeds.level_up(author=message.author, bot_latency=self.latency, lvl=current_level)
+
             await message.channel.send(embed=embed)
 
         # update current_xp and current_level in database
         self.logger.debug(f"Message author id: {str(message_author_id)}")
-        cursor.execute("UPDATE levels SET Level = ?, Xp = ? WHERE UserId = ?", (current_level, current_xp, str(message_author_id)))
+        cursor.execute("UPDATE Users SET Level = ?, Xp = ? WHERE UserId = ? AND ServerId = ?", (current_level, current_xp, str(message_author_id), config["server_id"]))
         db.commit()
 
         await self.process_commands(message)
@@ -147,9 +161,13 @@ class App(commands.Bot):
         Connect to the SQL database and create a row of the new member in the table 'levels'.
         TODO: By default, the first role of the list is assigned to new members.
         '''
-        cursor.execute("INSERT INTO levels VALUES (?, ?, ?, ?)",
-                    str(member.id), 1, 0, config["server_id"]) # not tested yet, may need data to be packed or use executemany
+        cursor.execute("INSERT INTO Users VALUES (?, ?, ?, ?)",
+                    (str(member.id), 0, 0, config["server_id"]))
         db.commit()
+        default_role = discord.utils.get(member.guild.roles, name=activity_roles[0])
+        if default_role is not None:
+            await member.add_roles(default_role)
+            self.logger.info(f"New member: default role assigned.")
 
     async def on_command_completion(self, context: commands.Context) -> None:
         '''
@@ -233,6 +251,7 @@ async def load_cogs(app):
 
 def main():
     app = App()
+    app.remove_command('help')
     asyncio.run(load_cogs(app))
     app.run()
 
