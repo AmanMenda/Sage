@@ -1,17 +1,15 @@
 # Sage
 
 A discord bot written in a highly reusable way using the <a href="https://discordpy.readthedocs.io/">discord python API</a>.
+It provides a simple however efficient level system and the ability to associate roles to levels. Accordingly to the command
+you've typed, it also generates fun embeds. It is a fully hosted bot that we've been using in our Game Dev Discord server <a href="https://discord.gg/RpyEAqFvQ9">Virtual Creation HUB</a>. Feel free to join us.
 
-## Features
+## Stack
 
-- [x] Customizable level system and ability to associate roles to levels
-- [x] Generate fun embeds when someone level-up or get a new role
-- [ ] Hosted 24/7
+- Python 3+
+- SQLite 3
+- Discord.py
 
-## The data we store
+## License
 
-Only your id, current level and experience points (xps) on the server.
-
-## How to use our bot
-
-(Not deployed yet)
+MIT License
