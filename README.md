@@ -2,7 +2,7 @@
 
 A discord bot written in a highly reusable way using the <a href="https://discordpy.readthedocs.io/">discord python API</a>.
 It provides a simple however efficient level system and the ability to associate roles to levels. Accordingly to the command
-you've typed, it also generates fun embeds. It is a fully hosted bot that we've been using in our Game Dev Discord server <a href="https://discord.gg/RpyEAqFvQ9">Virtual Creation HUB</a>. Feel free to join us.
+you've typed, it also generates fun embeds. It is a fully hosted bot that we've been using in our Game Dev Discord server <a href="https://discord.gg/RpyEAqFvQ9">Virtual Creation HUB</a>. It would be nice to see you around.
 
 ## Stack
 
